@@ -1,8 +1,10 @@
 ####  Скачать приложение:
 >$ git clone https://github.com/ivansaprykin/task2-spring-user-service.git  
->$ cd task2-spring-user-service/  
+>$ cd task2-spring-user-service/
+
 ####Запуск тестов:
 >$ ./mvnw test
+
 ####Запуск приложения:
 >$ ./mvnw spring-boot:run
 
