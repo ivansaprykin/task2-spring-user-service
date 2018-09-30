@@ -1,5 +1,6 @@
 package com.ivansaprykin.testtasks.bostongene.springuserservice.exceptions.handlers;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.ivansaprykin.testtasks.bostongene.springuserservice.exceptions.ApiError;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.HttpMediaTypeNotSupportedException;
@@ -48,6 +49,7 @@ public class GlobalExceptionHandler {
         String message = "Unsupported  media type: '" + ex.getContentType()  + "'. Try 'application/JSON'";
         return  new ApiError(message);
     }
+
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
     @ResponseStatus(HttpStatus.METHOD_NOT_ALLOWED)
     public ApiError handleHttpRequestMethodNotSupportedException(HttpRequestMethodNotSupportedException ex) {
@@ -59,6 +61,14 @@ public class GlobalExceptionHandler {
         ex.getSupportedHttpMethods().forEach(t -> builder.append(t + " "));
 
         return  new ApiError(builder.toString());
+    }
+
+    @ExceptionHandler(JsonProcessingException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ApiError handleJsonProcessingException(JsonProcessingException ex) {
+
+        String message = "Error processing JSON " + ex.getOriginalMessage();
+        return  new ApiError(message);
     }
 
 }

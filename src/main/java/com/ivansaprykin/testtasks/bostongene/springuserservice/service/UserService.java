@@ -7,6 +7,7 @@ import com.ivansaprykin.testtasks.bostongene.springuserservice.model.User;
 import com.ivansaprykin.testtasks.bostongene.springuserservice.repositories.UserRepository;
 import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -15,9 +16,11 @@ import java.util.Optional;
 public class UserService {
 
     private UserRepository userRepository;
+    private PasswordEncoder passwordEncoder;
 
-    public UserService(UserRepository userRepository) {
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     public HttpStatus deleteUserByEmail(String email) {
@@ -31,11 +34,11 @@ public class UserService {
     }
 
     public void addUser(SimplifiedUser userToAdd) throws UserWithSuchEmailAlreadyExistException {
-        User user = new User(userToAdd);
+        User user = new User(userToAdd, passwordEncoder.encode(userToAdd.getPassword()));
         try {
             userRepository.save(user);
         } catch (DataAccessException ex) {
-            throw new UserWithSuchEmailAlreadyExistException("User with email: " + user.getEmail() + " already exists!"); // TODO remove root cause
+            throw new UserWithSuchEmailAlreadyExistException("User with email: " + user.getEmail() + " already exists."); // TODO remove root cause
         }
     }
 
@@ -44,7 +47,7 @@ public class UserService {
         if(optionalUser.isPresent()) {
             return new SimplifiedUser(optionalUser.get());
         } else {
-            throw new UserDoesNotExistException("No user with email: " + email);
+            throw new UserDoesNotExistException("User with email: " + email + " does not exist.");
         }
     }
 }

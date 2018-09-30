@@ -1,11 +1,10 @@
 package com.ivansaprykin.testtasks.bostongene.springuserservice.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonRootName;
+import com.fasterxml.jackson.annotation.JsonInclude;
 
 import java.time.LocalDate;
-//
-//@JsonRootName(value = "user")
+import java.util.Objects;
+
 public class SimplifiedUser {
 
     private String firstName;
@@ -16,6 +15,7 @@ public class SimplifiedUser {
 
     private String email;
 
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private String password;
 
     public SimplifiedUser(User user) {
@@ -74,5 +74,21 @@ public class SimplifiedUser {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof SimplifiedUser)) return false;
+        SimplifiedUser user = (SimplifiedUser) o;
+        return Objects.equals(getFirstName(), user.getFirstName()) &&
+                Objects.equals(getLastName(), user.getLastName()) &&
+                Objects.equals(getBirthDate(), user.getBirthDate()) &&
+                Objects.equals(getEmail(), user.getEmail());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(getFirstName(), getLastName(), getBirthDate(), getEmail());
     }
 }

@@ -27,13 +27,12 @@ public class User {
     public User() {
     }
 
-    public User(SimplifiedUser simplifiedUser) {
+    public User(SimplifiedUser simplifiedUser, String  passwordEncoded) {
         this.firstName = simplifiedUser.getFirstName();
         this.lastName = simplifiedUser.getLastName();
         this.birthDate = simplifiedUser.getBirthDate();
         this.email = simplifiedUser.getEmail();
-
-        passwordEncoded = simplifiedUser.getPassword(); // TODO encode password
+        this.passwordEncoded = passwordEncoded;
     }
 
     public Long getId() {

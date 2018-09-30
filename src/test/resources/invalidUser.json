@@ -1,7 +1,7 @@
 {
   "firstName": "ivan",
   "lastName": "ivanov",
-  "birthDate": "2018-09-29",
+  "birthDate": "this is not a date!",
   "email": "my@mail.com",
   "password": "qwerty"
 }

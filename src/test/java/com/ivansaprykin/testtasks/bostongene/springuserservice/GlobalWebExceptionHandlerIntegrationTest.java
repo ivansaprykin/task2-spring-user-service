@@ -36,5 +36,4 @@ public class GlobalWebExceptionHandlerIntegrationTest {
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.message", is("No handler found for your request.")));
     }
-
 }

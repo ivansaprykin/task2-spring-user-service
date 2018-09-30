@@ -1,21 +1,22 @@
 package com.ivansaprykin.testtasks.bostongene.springuserservice;
 
+import com.ivansaprykin.testtasks.bostongene.springuserservice.model.SimplifiedUser;
+import com.ivansaprykin.testtasks.bostongene.springuserservice.service.UserService;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.ivansaprykin.testtasks.bostongene.springuserservice.exceptions.UserWithSuchEmailAlreadyExistException;
-import com.ivansaprykin.testtasks.bostongene.springuserservice.model.SimplifiedUser;
-import com.ivansaprykin.testtasks.bostongene.springuserservice.model.User;
-import com.ivansaprykin.testtasks.bostongene.springuserservice.service.UserService;
+
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.RequestBuilder;
@@ -23,25 +24,62 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 import java.time.LocalDate;
 import java.util.Random;
-import java.util.logging.SimpleFormatter;
 
 import static org.hamcrest.Matchers.endsWith;
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.startsWith;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
-public class UserControllerExceptionsTests {
+public class UserControllerTests {
 
     @Autowired
     private MockMvc mockMvc;
 
     @Autowired
     private UserService userService;
+
+    private static ObjectMapper mapper;
+
+    @BeforeClass
+    public static void createObjectMapper() {
+        mapper = new ObjectMapper();
+        mapper.registerModule(new JavaTimeModule());
+        mapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
+    }
+
+    @Test
+    public void in_getUser_when_UserExists_should_ReturnUserAsJson() throws Exception {
+        SimplifiedUser user = createUniqueTestUser();
+        userService.addUser(user);
+
+        RequestBuilder requestBuilder = MockMvcRequestBuilders
+                .get("/user/get")
+                .param("email", user.getEmail())
+                .accept(MediaType.APPLICATION_JSON);
+
+        user.setPassword("");
+        String userShouldBeReturnedWithoutPassword = serializeUserToJson(user);
+        mockMvc.perform(requestBuilder)
+                .andExpect(status().isOk())
+                .andExpect(content().json(userShouldBeReturnedWithoutPassword));
+    }
+
+    @Test
+    public void in_getUser_when_UserExists_should_ReturnHttp200() throws Exception {
+        SimplifiedUser user = createUniqueTestUser();
+        userService.addUser(user);
+
+        RequestBuilder requestBuilder = MockMvcRequestBuilders
+                .get("/user/get")
+                .param("email", user.getEmail())
+                .accept(MediaType.APPLICATION_JSON);
+
+        mockMvc.perform(requestBuilder)
+                .andExpect(status().isOk());
+    }
 
     @Test
     public void in_getUser_when_MissingRequestParameter_should_ReturnHttp400() throws Exception {
@@ -80,37 +118,26 @@ public class UserControllerExceptionsTests {
 
     @Test
     public void in_addUser_when_AddingNewUser_should_ReturnHttp201() throws Exception {
-        SimplifiedUser userToAdd = new SimplifiedUser("ivan", "ivanov", LocalDate.now(), "sm", "qwerty");
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.registerModule(new JavaTimeModule());
-        mapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
-
+        SimplifiedUser user = createUniqueTestUser();
         RequestBuilder requestBuilder = MockMvcRequestBuilders
                 .post("/user/add")
-                .content(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(userToAdd))
+                .content(serializeUserToJson(user))
                 .contentType("application/JSON")
                 .accept(MediaType.APPLICATION_JSON);
 
         mockMvc.perform(requestBuilder)
-                .andExpect(header().string ("location", "/user/get?email="+ userToAdd.getEmail()))
+                .andExpect(header().string ("location", "/user/get?email="+ user.getEmail()))
                 .andExpect(status().isCreated());
     }
 
     @Test
     public void in_addUser_when_AddingExistentUser_should_ReturnHttp409() throws Exception {
-        String uniqueEmail = "mymailat@com";
-        SimplifiedUser userToUpdate = new SimplifiedUser("Alex", "Doe", LocalDate.now(), uniqueEmail, "qwerty");
-        userService.addUser(userToUpdate);
-        userToUpdate.setFirstName("John");
-
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.registerModule(new JavaTimeModule());
-        mapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
-        String userSerializedInJson = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(userToUpdate);
+        SimplifiedUser user = createUniqueTestUser();
+        userService.addUser(user);
 
         RequestBuilder requestBuilder = MockMvcRequestBuilders
                 .post("/user/add")
-                .content(userSerializedInJson)
+                .content(serializeUserToJson(user))
                 .contentType("application/JSON")
                 .accept(MediaType.APPLICATION_JSON);
 
@@ -131,6 +158,21 @@ public class UserControllerExceptionsTests {
     }
 
     @Test
+    public void in_addUser_when_InvalidJsonInput_should_ReturnHttp400() throws Exception {
+        String  invalidJson = serializeUserToJson(createUniqueTestUser()).replace(LocalDate.now().toString(), "wrong!");
+
+        RequestBuilder requestBuilder = MockMvcRequestBuilders
+                .post("/user/add")
+                .contentType("application/JSON")
+                .content(invalidJson)
+                .accept(MediaType.APPLICATION_JSON);
+
+        mockMvc.perform(requestBuilder)
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message", startsWith("Error processing JSON")));
+    }
+
+    @Test
     public void in_addUser_when_UsedUnsupportedMethods_should_ReturnHttp405() throws Exception {
         String addUserUrl = "/user/add";
 
@@ -144,13 +186,12 @@ public class UserControllerExceptionsTests {
 
     @Test
     public void in_deleteUser_when_DeletingExistentUser_should_ReturnHttp204() throws Exception {
-        String  uniqueEmail = "myhotmail@ru";
-        SimplifiedUser user = new SimplifiedUser("James", "Potter", LocalDate.now(), uniqueEmail, "pass");
+        SimplifiedUser user = createUniqueTestUser();
         userService.addUser(user);
 
         RequestBuilder requestBuilder = MockMvcRequestBuilders
                 .delete("/user/delete")
-                .param("email", uniqueEmail)
+                .param("email", user.getEmail())
                 .accept(MediaType.APPLICATION_JSON);
 
         mockMvc.perform(requestBuilder)
@@ -190,6 +231,17 @@ public class UserControllerExceptionsTests {
                 .andExpect(status().isMethodNotAllowed());
         mockMvc.perform(post(deleteUserUrl))
                 .andExpect(status().isMethodNotAllowed());
+    }
+
+    private SimplifiedUser createUniqueTestUser() {
+        Random rand = new Random();
+        String uniqueEmail =  "my" + rand.nextLong() + "@mail" + rand.nextLong() + ".com";
+        SimplifiedUser user = new SimplifiedUser("Jane", "Doe", LocalDate.now(), uniqueEmail, "qwerty");
+        return user;
+    }
+
+    private String serializeUserToJson(SimplifiedUser user) throws JsonProcessingException {
+        return mapper.writerWithDefaultPrettyPrinter().writeValueAsString(user);
     }
 
 }
