@@ -1,34 +1,32 @@
 ####  Скачать приложение:
 >$ git clone https://github.com/ivansaprykin/task2-spring-user-service.git  
->$ cd task2-spring-user-service/
+>$ cd task2-spring-user-service/  
 
-####Запуск тестов:
->$ ./mvnw test
+#### Запуск тестов:  
+>$ ./mvnw test  
 
-####Запуск приложения:
->$ ./mvnw spring-boot:run
+#### Запуск приложения:  
+>$ ./mvnw spring-boot:run  
 
-####Примеры запросов:
-Файл с описанием пользователя для запросов
->$ cat src/test/resources/user.json 
+#### Примеры запросов:  
+Файл с описанием пользователя для запросов  
+>$ cat src/test/resources/user.json  
 
-#####Добавление пользователя:
->$ curl -X POST -H "Content-Type: application/json" --data @src/test/resources/user.json http://localhost:8080/user/add
+##### Добавление пользователя:  
+>$ curl -X POST -H "Content-Type: application/json" --data @src/test/resources/user.json http://localhost:8080/user/add  
 
-#####Поиск пользователя по email
->$ curl http://localhost:8080/user/get?email=my@mail.com
+##### Поиск пользователя по email  
+>$ curl http://localhost:8080/user/get?email=my@mail.com  
 
-#####Удаление пользователя по email
+##### Удаление пользователя по email  
 >$ curl -X DELETE http://localhost:8080/user/delete?email=my@mail.com
 
 В приложении включена консоль для доступа к inMemory базе данных:  
 http://localhost:8080/h2-console/  
 Driver Class: org.h2.Driver  
 JDBC URL: jdbc:h2:mem:testdb   
-Можно убедиться, что пароль хранится в безопасной форме.
-  
-####Описание REST API
-
+Можно убедиться, что пароль хранится в безопасной форме.    
+#### Описание REST API  
 Все взаимодействие происходит с использованием JSON сериализованных данных.
 Необходимо учитывать занчения кода HTTP статуса.
 В случае ошибки тело HTTP ответа содержит описание ошибки в формате:  
@@ -41,9 +39,9 @@ JDBC URL: jdbc:h2:mem:testdb
   "timestamp": "2018-09-30T15:25:06.314Z"  
 }
 
-####Возможные действия
+#### Возможные действия
 
-#####Добавление пользователя:
+##### Добавление пользователя:
 POST запрос по адресу:  
 /user/add  
 тело запроса содержит описание пользователя в формате:  
@@ -67,7 +65,7 @@ Location: /user/get?email=Email
 При выполнении запроса с неверным форматом JSON получим код - 400 Bad request, а в теле ответа будет описание ошибки:    
 >"message":"UError processing JSON Cannot deserialize value of ..."  
 
-#####Поиск пользователя по email
+##### Поиск пользователя по email
 GET запрос по адресу:  
 >/user/get  
 > ? email=<emailПользователя>
@@ -88,13 +86,13 @@ GET запрос по адресу:
 При отправке запроса без указания параметра email получим код - 400 Bad request, а в теле ответа будет описание ошибки: 
 >"message":"email parameter is missing."
 
-#####Удаление пользователя по email
+##### Удаление пользователя по email
 DELETE запрос по адресу:
 >/user/delete  
 > ? email=<emailПользователя>
 
-######Согласно спецификации HTTP/1.1 метод DELETE должен обладать свойством идемпотентности.
-######Данный API реализует это позволяя выполнять DELETE запросы несколько раз по одному и тому же параметру email не вызывая ошибку, с разницей лишь в получаемом HTTP статус-коде: если пользователь существовал и был удален, код - 204 No сontent, если пользователя с заданным email-ом нет, код - 404 Not found.  
+###### Согласно спецификации HTTP/1.1 метод DELETE должен обладать свойством идемпотентности.
+###### Данный API реализует это позволяя выполнять DELETE запросы несколько раз по одному и тому же параметру email не вызывая ошибку, с разницей лишь в получаемом HTTP статус-коде: если пользователь существовал и был удален, код - 204 No сontent, если пользователя с заданным email-ом нет, код - 404 Not found.  
 При отправке запроса без указания параметра email получим код - 400 Bad request, а в теле ответа будет описание ошибки: 
 >"message":"email parameter is missing."
 
