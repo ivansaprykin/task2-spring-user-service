@@ -5,7 +5,6 @@ import com.ivansaprykin.testtasks.bostongene.springuserservice.exceptions.UserWi
 import com.ivansaprykin.testtasks.bostongene.springuserservice.model.SimplifiedUser;
 import com.ivansaprykin.testtasks.bostongene.springuserservice.model.User;
 import com.ivansaprykin.testtasks.bostongene.springuserservice.repositories.UserRepository;
-import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -35,10 +34,11 @@ public class UserService {
 
     public void addUser(SimplifiedUser userToAdd) throws UserWithSuchEmailAlreadyExistException {
         User user = new User(userToAdd, passwordEncoder.encode(userToAdd.getPassword()));
-        try {
+        Optional<User> optionalUser = userRepository.findByEmail(user.getEmail() );
+        if(optionalUser.isPresent()) {
+            throw new UserWithSuchEmailAlreadyExistException("User with email: " + user.getEmail() + " already exists.");
+        } else {
             userRepository.save(user);
-        } catch (DataAccessException ex) {
-            throw new UserWithSuchEmailAlreadyExistException("User with email: " + user.getEmail() + " already exists."); // TODO remove root cause
         }
     }
 
