@@ -1,4 +1,4 @@
-####  Скачать приложение:
+###  Скачать приложение:
 >$ git clone https://github.com/ivansaprykin/task2-spring-user-service.git  
 >$ cd task2-spring-user-service/  
 
@@ -8,13 +8,19 @@
 #### Запуск приложения:  
 >$ ./mvnw spring-boot:run  
 
+### Или загрузить docker image:  
+>$ docker pull ivansaprykin/bostongene-task2-spring-user-service  
+>$ docker run -p 8080:8080 -t ivansaprykin/bostongene-task2-spring-user-service  
+
 #### Примеры запросов:  
 Файл с описанием пользователя для запросов  
 >$ cat src/test/resources/user.json  
 
 ##### Добавление пользователя:  
->$ curl -X POST -H "Content-Type: application/json" --data @src/test/resources/user.json http://localhost:8080/user/add  
+>$ curl -X POST -H "Content-Type: application/json" --data @src/test/resources/user.json http://localhost:8080/user/add
 
+или явно указав значения:      
+>$ curl -X POST -H "Content-Type: application/json" --data  '{ "firstName": "Имя", "lastName": "Фамилия", "birthDate": "2018-09-30", "email": "emailПользователя", "password": "Пароль"}' http://localhost:8080/user/add
 ##### Поиск пользователя по email  
 >$ curl http://localhost:8080/user/get?email=my@mail.com  
 
@@ -48,7 +54,7 @@ POST запрос по адресу:
 >{  
   "firstName": "Имя",  
   "lastName": "Фамилия",  
-  "birthDate": "Дата рождения в формате: ГГГГ-ММ-ДД",  
+  "birthDate": "2018-09-30",  
   "email": "emailПользователя",  
   "password": "Пароль"  
 }
